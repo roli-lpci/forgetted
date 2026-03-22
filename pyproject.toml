@@ -3,16 +3,16 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "incognito-agent"
+name = "forgetted"
 version = "0.1.0"
-description = "Mid-conversation incognito mode for AI agents — checkpoint, block writes, self-clean"
+description = "Selective memory governance for AI agents — branch the timeline, never merge back"
 readme = "README.md"
 license = {text = "Apache-2.0"}
 requires-python = ">=3.9"
 authors = [
     {name = "Hermes Labs", email = "lpcisystems@gmail.com"},
 ]
-keywords = ["llm", "agent", "privacy", "incognito", "ai-safety"]
+keywords = ["llm", "agent", "memory", "privacy", "ai-safety", "fork", "selective-forget"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -36,12 +36,12 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/roli-lpci/incognito-agent"
-Repository = "https://github.com/roli-lpci/incognito-agent"
-Issues = "https://github.com/roli-lpci/incognito-agent/issues"
+Homepage = "https://github.com/roli-lpci/forgetted"
+Repository = "https://github.com/roli-lpci/forgetted"
+Issues = "https://github.com/roli-lpci/forgetted/issues"
 
 [tool.setuptools.packages.find]
-include = ["incognito*"]
+include = ["forgetted*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

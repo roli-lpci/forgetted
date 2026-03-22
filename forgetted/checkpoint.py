@@ -1,11 +1,11 @@
 """
-incognito.checkpoint — Checkpoint creation and resume logic.
+forgetted.checkpoint — Checkpoint creation and resume logic.
 
-Before entering incognito mode, the agent saves a compact summary of the
+Before entering forgetted mode, the agent saves a compact summary of the
 current session state.  On the next normal session, the checkpoint is loaded
 (providing continuity) and then deleted (single-use).
 
-Checkpoint files live at ``<workspace>/memory/incognito-checkpoint.md``.
+Checkpoint files live at ``<workspace>/memory/forgetted-checkpoint.md``.
 """
 
 import logging
@@ -15,11 +15,11 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-_CHECKPOINT_FILENAME = "incognito-checkpoint.md"
+_CHECKPOINT_FILENAME = "forgetted-checkpoint.md"
 
 
 def create_checkpoint(context_summary: str, workspace: str) -> Path:
-    """Write a compact resumption file before entering incognito mode.
+    """Write a compact resumption file before entering forgetted mode.
 
     Parameters
     ----------
@@ -41,18 +41,18 @@ def create_checkpoint(context_summary: str, workspace: str) -> Path:
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
     content = (
-        f"# Incognito Checkpoint\n"
+        f"# Forgetted Checkpoint\n"
         f"*Created: {timestamp}*\n\n"
         f"## Session Context\n"
         f"{context_summary}\n\n"
         f"## Instructions\n"
-        f"This checkpoint was created before an incognito window. "
-        f"Resume from the context above. The incognito conversation "
+        f"This checkpoint was created before a forgetted window. "
+        f"Resume from the context above. The forgetted conversation "
         f"has been erased — do not attempt to recover it.\n"
     )
 
     checkpoint_path.write_text(content, encoding="utf-8")
-    logger.info("🕶️  Checkpoint saved to %s", checkpoint_path)
+    logger.info("🫥 Checkpoint saved to %s", checkpoint_path)
     return checkpoint_path
 
 
@@ -78,5 +78,5 @@ def load_checkpoint(workspace: str) -> Optional[str]:
 
     content = checkpoint_path.read_text(encoding="utf-8")
     checkpoint_path.unlink()
-    logger.info("🕶️  Checkpoint loaded and consumed from %s", checkpoint_path)
+    logger.info("🫥 Checkpoint loaded and consumed from %s", checkpoint_path)
     return content

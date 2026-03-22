@@ -1,18 +1,24 @@
 """
-incognito.guard — Write-blocking interceptor for incognito mode.
+forgetted.guard — Write-blocking interceptor for forgetted mode.
 
 Monkey-patches ``builtins.open`` while active so that any attempt to write
 (modes 'w', 'a', 'x' and their binary variants) to protected paths inside
 the workspace silently returns a no-op file handle.  Reads are never blocked.
+
+This is the core primitive: "this session can read from memory but cannot
+write to it." A fork without consequence — the branch exists in context
+but is never merged back into the agent's persistent state.
 
 Protected paths:
     - memory/ directory (daily logs, checkpoints)
     - DELIVERABLES.md
     - Any *.jsonl file (session logs)
 
-Design decision: we patch builtins.open rather than wrapping individual tool
-calls because agent frameworks may write through many layers.  The patch is
-scoped to the guard's lifetime and restored on stop().
+Security model:
+    - Input: workspace path (trusted, set by caller)
+    - Patches builtins.open at process level — catches writes from any layer
+    - Returns no-op StringIO/BytesIO instead of raising — agent code doesn't crash
+    - Restores original open on stop() — no permanent side effects
 """
 
 import builtins
@@ -20,7 +26,7 @@ import io
 import logging
 import re
 from pathlib import Path
-from typing import Optional, Set
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +43,7 @@ _DEFAULT_PROTECTED = {
 _BLOCKED_EXTENSIONS = {".jsonl"}
 
 
-class IncognitoGuard:
+class ForgetGuard:
     """Context manager that blocks file writes to protected workspace paths.
 
     Parameters
@@ -51,18 +57,18 @@ class IncognitoGuard:
     -----
     ::
 
-        guard = IncognitoGuard("/path/to/workspace")
+        guard = ForgetGuard("/path/to/workspace")
         guard.start()
-        # ... agent runs, writes to memory/ are silently discarded ...
+        # ... agent runs, writes to memory/ silently vanish ...
         guard.stop()
 
     Or as a context manager::
 
-        with IncognitoGuard("/path/to/workspace"):
+        with ForgetGuard("/path/to/workspace"):
             ...
     """
 
-    def __init__(self, workspace_path: str, extra_protected: Optional[Set[str]] = None):
+    def __init__(self, workspace_path: str, extra_protected: Optional[set[str]] = None):
         self.workspace = Path(workspace_path).resolve()
         self.protected = _DEFAULT_PROTECTED | (extra_protected or set())
         self.active = False
@@ -79,7 +85,7 @@ class IncognitoGuard:
         self._blocked_count = 0
         builtins.open = self._patched_open  # type: ignore[assignment]
         self.active = True
-        logger.info("🕶️  Incognito guard active — writes to protected paths are blocked")
+        logger.info("🫥 Forgetted guard active — writes to protected paths are blocked")
 
     def stop(self):
         """Deactivate write blocking.  Restores original ``builtins.open``."""
@@ -88,7 +94,7 @@ class IncognitoGuard:
         builtins.open = self._original_open  # type: ignore[assignment]
         self._original_open = None
         self.active = False
-        logger.info("🕶️  Incognito guard stopped — %d write(s) blocked", self._blocked_count)
+        logger.info("🫥 Forgetted guard stopped — %d write(s) blocked", self._blocked_count)
 
     @property
     def blocked_count(self) -> int:
@@ -146,7 +152,7 @@ class IncognitoGuard:
 
         if self._is_write_mode(mode) and self._is_protected(filepath):
             self._blocked_count += 1
-            logger.debug("🕶️  Blocked write to %s (mode=%s)", filepath, mode)
+            logger.debug("🫥 Blocked write to %s (mode=%s)", filepath, mode)
             # Return a no-op StringIO/BytesIO depending on mode.
             if "b" in mode:
                 return io.BytesIO()
