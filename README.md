@@ -1,165 +1,190 @@
-# forgetted 🫥
+<p align="center">
+  <h1 align="center">🫥 forgetted</h1>
+  <p align="center"><strong>Your AI agent remembers everything. Now it doesn't have to.</strong></p>
+  <p align="center">
+    <a href="https://pypi.org/project/forgetted/"><img src="https://img.shields.io/pypi/v/forgetted?color=blue" alt="PyPI"></a>
+    <a href="https://github.com/roli-lpci/forgetted/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-green" alt="License"></a>
+    <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.9+-blue" alt="Python"></a>
+  </p>
+</p>
 
-> *Branch the timeline, but never merge back.*
+---
 
-Selective memory governance for AI agents.
+**forgetted** gives AI agents selective memory governance. One line of code, and your agent keeps full context but writes nothing to memory.
 
-**forgetted** is not incognito mode. It's a memory architecture primitive — a fork without consequence. Your agent keeps full context from the past, but nothing from the forgetted window persists into the future.
+> Traditional incognito is dumb: no past, no future, fully isolated.
+> **forgetted** gives you: full continuity + selective non-persistence.
 
-Traditional incognito is dumb: no past, no future, fully isolated.
-**forgetted** gives you: full continuity + selective non-persistence.
+```python
+from forgetted import ForgetSession
 
-> "I want context… but I don't want consequences."
+with ForgetSession("/path/to/workspace"):
+    agent.chat("this conversation never happened")
+# ↑ No trace in memory, logs, or vector DB. Agent resumes normally.
+```
 
-## Installation
+## Why?
+
+AI agents write everything: memory files, session logs, vector embeddings, deliverables. Sometimes you need context without consequences:
+
+- 💬 **Sensitive conversations** that shouldn't persist in agent memory
+- 🧪 **Experiments** you don't want polluting your agent's knowledge base
+- 🔒 **Client data** discussed but not stored
+- 🤔 **Brainstorming** that shouldn't bias future responses
+
+**forgetted** is not a prompt. It's software that wraps the agent's persistence layer — writes silently vanish, reads still work, and the agent resumes normally after.
+
+## Install
 
 ```bash
 pip install forgetted
 ```
 
-With optional adapters:
+## Quick Start
 
-```bash
-pip install forgetted[trash]   # recoverable file deletion
-```
-
-## Quick Start (30 seconds)
+### Simple (file-level protection)
 
 ```python
 from forgetted import ForgetSession
 
-# Everything inside the session is forgetted
-with ForgetSession("/path/to/workspace"):
-    # Agent runs with full context
-    # But writes to memory, logs, and deliverables silently vanish
+# Everything inside is forgetted — writes to memory/, logs, deliverables vanish
+with ForgetSession("/path/to/agent/workspace"):
     agent.chat("tell me about the secret project")
-
-# Back to normal — no trace remains
 ```
 
-## With Custom Adapters
+### With vector DB protection
 
 ```python
 from forgetted import ForgetSession
 from forgetted.adapters.mem0 import Mem0Adapter
 
-# Register your persistence layers
 session = ForgetSession(
     workspace="/path/to/workspace",
     adapters=[Mem0Adapter(memory_instance, user_id="roli")],
-    session_id="abc-123",
-    agents_dir="~/.openclaw/agents/",
 )
+session.start(checkpoint_summary="Discussing API design")
+# ... conversation happens with full context, zero persistence ...
+session.stop()  # re-enables all layers, cleans up
+```
 
-# Checkpoint before going dark (optional)
-session.start(checkpoint_summary="Discussing API design for v2")
+### Trigger detection (for chat agents)
 
-# ... forgetted conversation happens ...
+```python
+from forgetted import is_forget_trigger, ForgetSession
 
-# Re-enable all layers, run cleanup sweep, delete session log
-session.stop(clean=True)
+if is_forget_trigger(user_message):  # "/forget", "off the record", etc.
+    with ForgetSession(workspace):
+        handle_conversation()
 ```
 
 ## What Gets Blocked
 
-| Layer | Adapter | Status |
+| Layer | How | Status |
 |---|---|---|
-| Memory files (`memory/*.md`) | `FileWriteAdapter` (built-in) | ✅ Blocked |
-| Deliverables log | `FileWriteAdapter` (built-in) | ✅ Blocked |
-| Session logs (`*.jsonl`) | `FileWriteAdapter` + cleaner | ✅ Blocked + cleaned |
-| mem0 (semantic memory) | `Mem0Adapter` | ✅ Blocked + cleaned |
-| Your custom DB | Write your own adapter | 🔌 Extensible |
+| Memory files (`memory/*.md`) | `builtins.open` patch | ✅ Blocked |
+| Deliverables / audit logs | `builtins.open` patch | ✅ Blocked |
+| Session logs (`*.jsonl`) | Blocked + deleted on exit | ✅ Blocked |
+| mem0 / semantic memory | Method patch on `add`/`update` | ✅ Blocked |
+| Any custom persistence | Write your own adapter | 🔌 Extensible |
 
-## Architecture
+## How It Works
 
-### ForgetSession (orchestrator)
+**forgetted** uses a layered defense:
 
-Coordinates multiple persistence adapters. Always includes `FileWriteAdapter` as the safety net.
+1. **`FileWriteAdapter`** (always on) — patches `builtins.open` to intercept writes to protected paths. Returns no-op file handles instead of raising — agent code doesn't crash, writes just vanish.
 
-**Ordering contract for `stop()`:**
-1. Re-enable all adapters (restore normal writes)
-2. Run cleanup on each adapter (post-window sweep)
-3. Delete session log
+2. **`Mem0Adapter`** (opt-in) — patches `memory.add()` and `memory.update()` during the window. Post-window cleanup deletes any memories that leaked through.
 
-This ordering ensures cleanup code can write freely (e.g., `mem0.delete()`) because adapters are re-enabled first.
+3. **`ForgetSession`** orchestrates everything: checkpoint → disable adapters → run conversation → enable adapters → cleanup → delete session log.
 
-### Adapter Pattern
-
-Every persistence layer implements a simple interface:
-
-```python
-from forgetted.adapters.base import PersistenceAdapter
-
-class MyAdapter(PersistenceAdapter):
-    name = "my-db"
-    is_active = False
-
-    def disable(self):   # Block writes
-    def enable(self):    # Restore writes
-    def cleanup(self):   # Post-window sweep
-```
-
-Built-in adapters:
-- **FileWriteAdapter** — patches `builtins.open` to block file writes (safety net)
-- **Mem0Adapter** — blocks `memory.add()` / `memory.update()`, cleans by timestamp
-
-### Threat Model
-
-**What forgetted blocks:** Everything the agent controls — memory files, vector DB writes, session logs, deliverables.
-
-**What forgetted does NOT block:** LLM API provider logs, network telemetry, OS-level forensics. That's not our scope.
-
-**The guarantee:** "If someone looks through the agent's memory and logs, they won't find what you didn't want them to find."
-
-## The Test
-
-If I use forgetted like this:
-1. I ask something sensitive in a forgetted window
-2. I exit
-3. Later I ask something related in normal mode
-
-Can the agent infer anything from that prior interaction?
-
-**If yes → we failed. If no → we built something real.**
+Reads are **never** blocked. The agent has full context — it just can't write new context.
 
 ## Write Your Own Adapter
+
+Any persistence layer can be controlled:
 
 ```python
 from forgetted.adapters.base import PersistenceAdapter
 
 class RedisAdapter(PersistenceAdapter):
-    def __init__(self, client):
-        self._client = client
-        self._active = False
-        self._blocked_keys = []
-
-    @property
-    def name(self): return "redis"
-
-    @property
-    def is_active(self): return self._active
+    name = "redis"
 
     def disable(self):
-        self._client.config_set("save", "")  # disable persistence
+        self._client.config_set("save", "")
         self._active = True
 
     def enable(self):
-        self._client.config_set("save", "3600 1")  # restore
+        self._client.config_set("save", "3600 1")
         self._active = False
 
     def cleanup(self):
-        for key in self._blocked_keys:
+        for key in self._window_keys:
             self._client.delete(key)
+
+    @property
+    def is_active(self): return self._active
+```
+
+Register it: `ForgetSession(workspace, adapters=[RedisAdapter(client)])`
+
+## Trigger Phrases
+
+Built-in detection for natural-language triggers:
+
+| Trigger | Example |
+|---|---|
+| `/forgetted` | "/forgetted" |
+| `/forget` | "/forget" |
+| `forget this` | "hey, forget this conversation" |
+| `off the record` | "let's go off the record" |
+| `forgetted mode` | "enable forgetted mode" |
+| `don't remember this` | "don't remember this" |
+
+## Architecture
+
+```
+┌─────────────────────────────────────────┐
+│           ForgetSession                  │
+│  (orchestrator — context manager)        │
+├─────────────────────────────────────────┤
+│  ┌──────────────┐  ┌──────────────┐     │
+│  │ FileWrite    │  │ Mem0         │     │
+│  │ Adapter      │  │ Adapter      │ ... │
+│  │ (safety net) │  │ (opt-in)     │     │
+│  └──────────────┘  └──────────────┘     │
+├─────────────────────────────────────────┤
+│  checkpoint → disable → conversation    │
+│  → enable → cleanup → delete log        │
+└─────────────────────────────────────────┘
 ```
 
 ## What This Really Is
 
-This is not a UX feature. It's:
+This is not a UX toggle. It's a **memory governance primitive**.
 
-- **A memory governance primitive** — user-controlled memory architecture for AI systems
-- **A fork without consequence** — like git: you branch, but you never merge back
-- **A standard, not just a library** — frameworks can implement the adapter interface natively
+Like git: you branch, but you never merge back. The conversation exists in context but is never written to the agent's persistent state. After the window closes, it's as if it never happened.
+
+> *"I want context… but I don't want consequences."*
+
+## Tested
+
+97 tests including an adversarial suite:
+- ✅ Write blocking (open w/a/x/wb/r+, symlinks, binary)
+- ✅ Trigger detection (zero false positives on "forgot password", "forgetful", etc.)
+- ✅ Adapter error isolation (one failing adapter doesn't break others)
+- ✅ Exception safety (cleanup runs even if conversation crashes)
+- ✅ Idempotency (double-start, stop-before-start, double-stop all safe)
+
+Known limitations are [documented as xfail tests](tests/test_adversarial.py) — not hidden.
+
+## Threat Model
+
+**What forgetted blocks:** Everything the agent controls — memory files, vector DB writes, session logs, deliverables.
+
+**What forgetted does NOT block:** LLM API provider logs, network telemetry, OS-level forensics. That's not the point.
+
+**The guarantee:** *"If someone looks through the agent's memory and logs, they won't find what you forgetted."*
 
 ## License
 
-Apache-2.0
+[Apache-2.0](LICENSE) — Hermes Labs
