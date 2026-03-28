@@ -1,0 +1,32 @@
+# forgetted
+
+> Selective memory governance for AI agents. Branch the conversation timeline — keep context, block persistence.
+
+forgetted gives AI agents an "incognito mode." During a forgetted window, the agent has full context but writes nothing to memory files, session logs, vector DBs, or deliverables. When the window closes, everything is cleaned up as if it never happened.
+
+Key properties:
+- builtins.open monkey-patch catches writes from any Python layer
+- Adapter pattern for extensibility (file writes, mem0, custom)
+- No-op returns instead of raising — agent code doesn't crash
+- Idempotent: double-start, stop-before-start, double-stop are safe
+
+Stack: Python 3.9+, zero required dependencies. Optional mem0 adapter.
+
+## Docs
+- [README](README.md): Architecture, threat model, quick start, adapter guide
+- [CHANGELOG](CHANGELOG.md): Version history
+
+## Code
+- [Session](forgetted/session.py): ForgetSession orchestrator (main entry point)
+- [Guard](forgetted/guard.py): ForgetGuard — builtins.open monkey-patch
+- [Trigger](forgetted/trigger.py): Detect forgetted activation in user messages
+- [Checkpoint](forgetted/checkpoint.py): Save/load resumption files
+- [Cleaner](forgetted/cleaner.py): Find and delete session logs
+- [Adapters](forgetted/adapters/): PersistenceAdapter ABC + file_write + mem0 adapters
+
+## Testing
+- 97 tests + 2 xfail covering triggers, guard, checkpoint, cleaner, session, adapters, adversarial vectors
+
+## Optional
+- [License](LICENSE): Apache 2.0
+- [Agent Instructions](AGENTS.md): Instructions for AI coding agents working on this repo
