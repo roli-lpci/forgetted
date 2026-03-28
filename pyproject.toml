@@ -36,9 +36,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/roli-lpci/forgetted"
+Homepage = "https://hermes-labs.ai"
 Repository = "https://github.com/roli-lpci/forgetted"
 Issues = "https://github.com/roli-lpci/forgetted/issues"
+Changelog = "https://github.com/roli-lpci/forgetted/blob/main/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 include = ["forgetted*"]

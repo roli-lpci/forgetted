@@ -2,9 +2,11 @@
   <h1 align="center">🫥 forgetted</h1>
   <p align="center"><strong>Your AI agent remembers everything. Now it doesn't have to.</strong></p>
   <p align="center">
-    <a href="https://pypi.org/project/forgetted/"><img src="https://img.shields.io/pypi/v/forgetted?color=blue" alt="PyPI"></a>
-    <a href="https://github.com/roli-lpci/forgetted/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-green" alt="License"></a>
-    <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.9+-blue" alt="Python"></a>
+    <a href="https://pypi.org/project/forgetted/"><img src="https://img.shields.io/pypi/v/forgetted" alt="PyPI"></a>
+    <a href="https://pypi.org/project/forgetted/"><img src="https://img.shields.io/pypi/dm/forgetted" alt="Downloads"></a>
+    <a href="https://github.com/roli-lpci/forgetted"><img src="https://img.shields.io/github/stars/roli-lpci/forgetted" alt="Stars"></a>
+    <a href="https://github.com/roli-lpci/forgetted/blob/main/LICENSE"><img src="https://img.shields.io/pypi/l/forgetted" alt="License"></a>
+    <a href="https://pypi.org/project/forgetted/"><img src="https://img.shields.io/pypi/pyversions/forgetted" alt="Python"></a>
   </p>
 </p>
 
