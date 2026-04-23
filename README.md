@@ -192,11 +192,11 @@ Known limitations are [documented as xfail tests](tests/test_adversarial.py) —
 
 forgetted is part of the [Hermes Labs](https://hermes-labs.ai) open-source suite:
 
-- [**little-canary**](https://github.com/roli-lpci/little-canary) — Prompt injection detection
-- [**lintlang**](https://github.com/roli-lpci/lintlang) — Static linter for AI agent configs
-- [**zer0dex**](https://github.com/roli-lpci/zer0dex) — Dual-layer memory for AI agents
-- [**zer0lint**](https://github.com/roli-lpci/zer0lint) — mem0 extraction diagnostics
-- [**suy-sideguy**](https://github.com/roli-lpci/suy-sideguy) — Autonomous agent watchdog
+- [**little-canary**](https://github.com/hermes-labs-ai/little-canary) — Prompt injection detection
+- [**lintlang**](https://github.com/hermes-labs-ai/lintlang) — Static linter for AI agent configs
+- [**zer0dex**](https://github.com/hermes-labs-ai/zer0dex) — Dual-layer memory for AI agents
+- [**zer0lint**](https://github.com/hermes-labs-ai/zer0lint) — mem0 extraction diagnostics
+- [**suy-sideguy**](https://github.com/hermes-labs-ai/suy-sideguy) — Autonomous agent watchdog
 - [**quickthink**](https://github.com/roli-lpci/quickthink) — Planning scaffolding for local LLMs
 
 ---
