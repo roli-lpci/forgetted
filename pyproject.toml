@@ -33,7 +33,7 @@ dependencies = []
 [project.optional-dependencies]
 trash = ["send2trash>=2.1.0"]
 dev = [
-    "pytest>=9.1.1; python_version >= \"3.10\"",
+    "pytest>=9.2.0; python_version >= \"3.10\"",
     "pytest>=8.4.2,<9; python_version < \"3.10\"",
     "pytest-cov>=7.1.0",
     "ruff>=0.16.8",
